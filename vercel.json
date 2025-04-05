@@ -10,7 +10,10 @@
     {
       "src": "/success",
       "dest": "index.js",
-      "methods": ["GET"]
+      "methods": ["GET"],
+      "headers": {
+        "Content-Type": "text/html"
+      }
     },
     {
       "src": "/validate-subscription",

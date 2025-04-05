@@ -47,6 +47,7 @@ app.get('/success', async (req, res) => {
     const subscription = await stripe.subscriptions.retrieve(session.subscription);
     console.log('Subscription retrieved:', subscription.id);
     
+    res.setHeader('Content-Type', 'text/html');
     res.send(`
       <!DOCTYPE html>
       <html>
