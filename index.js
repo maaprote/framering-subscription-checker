@@ -23,11 +23,29 @@ app.get('/', (req, res) => {
 
 // Success page endpoint
 app.get('/success', async (req, res) => {
+  console.log('Success page accessed');
+  console.log('Query params:', req.query);
+  
   const { session_id } = req.query;
   
+  if (!session_id) {
+    console.log('No session_id provided');
+    return res.status(400).send('Session ID is required');
+  }
+  
   try {
+    console.log('Retrieving session:', session_id);
     const session = await stripe.checkout.sessions.retrieve(session_id);
+    console.log('Session retrieved:', session.id);
+    
+    if (!session.subscription) {
+      console.log('No subscription found in session');
+      return res.status(400).send('No subscription found');
+    }
+    
+    console.log('Retrieving subscription:', session.subscription);
     const subscription = await stripe.subscriptions.retrieve(session.subscription);
+    console.log('Subscription retrieved:', subscription.id);
     
     res.send(`
       <!DOCTYPE html>
@@ -80,7 +98,8 @@ app.get('/success', async (req, res) => {
       </html>
     `);
   } catch (error) {
-    res.status(500).send('Error retrieving subscription details');
+    console.error('Error in success page:', error);
+    res.status(500).send(`Error retrieving subscription details: ${error.message}`);
   }
 });
 
