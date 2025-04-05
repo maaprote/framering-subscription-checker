@@ -8,9 +8,14 @@
   ],
   "routes": [
     {
+      "src": "/success",
+      "dest": "index.js",
+      "methods": ["GET"]
+    },
+    {
       "src": "/validate-subscription",
       "dest": "index.js",
-      "methods": ["POST", "OPTIONS"]
+      "methods": ["POST"]
     },
     {
       "src": "/webhook",
