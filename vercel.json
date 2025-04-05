@@ -6,29 +6,25 @@
       "use": "@vercel/node"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/success",
-      "dest": "index.js",
-      "methods": ["GET"],
+      "source": "/success",
+      "destination": "/index.js",
       "headers": {
         "Content-Type": "text/html"
       }
     },
     {
-      "src": "/validate-subscription",
-      "dest": "index.js",
-      "methods": ["POST"]
+      "source": "/validate-subscription",
+      "destination": "/index.js"
     },
     {
-      "src": "/webhook",
-      "dest": "index.js",
-      "methods": ["POST"]
+      "source": "/webhook",
+      "destination": "/index.js"
     },
     {
-      "src": "/",
-      "dest": "index.js",
-      "methods": ["GET"]
+      "source": "/",
+      "destination": "/index.js"
     }
   ],
   "headers": [
