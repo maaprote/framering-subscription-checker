@@ -14,10 +14,74 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use(express.static('public'));
 
 // Health check endpoint
 app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'Framer Subscription Checker API is running' });
+});
+
+// Success page endpoint
+app.get('/success', async (req, res) => {
+  const { session_id } = req.query;
+  
+  try {
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+    const subscription = await stripe.subscriptions.retrieve(session.subscription);
+    
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Subscription Success</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+              text-align: center;
+            }
+            .license-code {
+              background: #f5f5f5;
+              padding: 20px;
+              border-radius: 5px;
+              margin: 20px 0;
+              font-family: monospace;
+              font-size: 18px;
+              word-break: break-all;
+            }
+            .copy-button {
+              background: #0070f3;
+              color: white;
+              border: none;
+              padding: 10px 20px;
+              border-radius: 5px;
+              cursor: pointer;
+              margin-top: 10px;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Thank you for your subscription!</h1>
+          <p>Your subscription license code is:</p>
+          <div class="license-code" id="licenseCode">${subscription.id}</div>
+          <button class="copy-button" onclick="copyToClipboard()">Copy License Code</button>
+          <p>Please save this code. You'll need it to activate your Framer plugin.</p>
+          <script>
+            function copyToClipboard() {
+              const licenseCode = document.getElementById('licenseCode').textContent;
+              navigator.clipboard.writeText(licenseCode).then(() => {
+                alert('License code copied to clipboard!');
+              });
+            }
+          </script>
+        </body>
+      </html>
+    `);
+  } catch (error) {
+    res.status(500).send('Error retrieving subscription details');
+  }
 });
 
 // Subscription validation endpoint
