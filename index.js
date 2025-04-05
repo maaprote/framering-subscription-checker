@@ -18,7 +18,7 @@ app.use(express.static('public'));
 
 // Health check endpoint
 app.get('/', (req, res) => {
-  res.json({ status: 'ok', message: 'Framer Subscription Checker API is running' });
+  res.json({ status: 'ok', message: 'Framer Subscription Checker API is runnnnnnning' });
 });
 
 // Success page endpoint
