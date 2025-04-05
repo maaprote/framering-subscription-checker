@@ -9,10 +9,7 @@
   "rewrites": [
     {
       "source": "/success",
-      "destination": "/index.js",
-      "headers": {
-        "Content-Type": "text/html"
-      }
+      "destination": "/index.js"
     },
     {
       "source": "/validate-subscription",
@@ -28,6 +25,15 @@
     }
   ],
   "headers": [
+    {
+      "source": "/success",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/html"
+        }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [
