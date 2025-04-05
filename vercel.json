@@ -8,8 +8,38 @@
   ],
   "routes": [
     {
-      "src": "/(.*)",
-      "dest": "index.js"
+      "src": "/validate-subscription",
+      "dest": "index.js",
+      "methods": ["POST", "OPTIONS"]
+    },
+    {
+      "src": "/webhook",
+      "dest": "index.js",
+      "methods": ["POST"]
+    },
+    {
+      "src": "/",
+      "dest": "index.js",
+      "methods": ["GET"]
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type"
+        }
+      ]
     }
   ]
 } 
