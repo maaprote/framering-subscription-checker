@@ -2,18 +2,31 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const fs = require('fs');
+const path = require('path');
+const bodyParser = require('body-parser');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Load license codes
+const licenseCodes = JSON.parse(fs.readFileSync(path.join(__dirname, 'license_codes.json'), 'utf8')).licenseCodes;
+
+// Function to get a random license code
+function getRandomLicenseCode() {
+  const randomIndex = Math.floor(Math.random() * licenseCodes.length);
+  return licenseCodes[randomIndex];
+}
+
 // Middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors({
   origin: true, // Allow all origins
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
-app.use(express.json());
 app.use(express.static('public'));
 
 // Health check endpoint
@@ -32,15 +45,9 @@ app.get('/success', async (req, res) => {
     message = 'No session ID provided.';
   } else {
     try {
-      const session = await stripe.checkout.sessions.retrieve(session_id);
+      message = 'Your subscription license code is:';
+      licenseCode = getRandomLicenseCode();
 
-      if (!session.subscription) {
-        message = 'No subscription found in this session.';
-      } else {
-        const subscription = await stripe.subscriptions.retrieve(session.subscription);
-        message = 'Your subscription license code is:';
-        licenseCode = subscription.id;
-      }
     } catch (error) {
       console.error('Error retrieving session/subscription:', error);
       message = `Error retrieving subscription details: ${error.message}`;
@@ -107,83 +114,82 @@ app.get('/success', async (req, res) => {
 
 
 // Add POST handler for success page
-app.post('/success', async (req, res) => {
-  console.log('Success page accessed via POST');
-  console.log('Body:', req.body);
+// app.post('/success', async (req, res) => {
+//   console.log('Success page accessed via POST');
+//   console.log('Body:', req.body);
   
-  const { session_id } = req.body;
+//   const { session_id } = req.body;
   
-  if (!session_id) {
-    console.log('No session_id provided');
-    return res.status(400).send('Session ID is required');
-  }
+//   if (!session_id) {
+//     console.log('No session_id provided');
+//     return res.status(400).send('Session ID is required');
+//   }
   
-  try {
-    console.log('Retrieving session:', session_id);
-    const session = await stripe.checkout.sessions.retrieve(session_id);
-    console.log('Session retrieved:', session.id);
+//   try {
+//     console.log('Retrieving session:', session_id);
+//     const session = await stripe.checkout.sessions.retrieve(session_id);
+//     console.log('Session retrieved:', session.id);
     
-    if (!session.subscription) {
-      console.log('No subscription found in session');
-      return res.status(400).send('No subscription found');
-    }
+//     if (!session.subscription) {
+//       console.log('No subscription found in session');
+//       return res.status(400).send('No subscription found');
+//     }
     
-    console.log('Retrieving subscription:', session.subscription);
-    const subscription = await stripe.subscriptions.retrieve(session.subscription);
-    console.log('Subscription retrieved:', subscription.id);
+//     console.log('Retrieving subscription:', session.subscription);
+//     const subscription = await stripe.subscriptions.retrieve(session.subscription);
+//     console.log('Subscription retrieved:', subscription.id);
     
-    res.json({
-      success: true,
-      licenseCode: subscription.id
-    });
-  } catch (error) {
-    console.error('Error in success page:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
+//     res.json({
+//       success: true,
+//       licenseCode: subscription.id
+//     });
+//   } catch (error) {
+//     console.error('Error in success page:', error);
+//     res.status(500).json({
+//       success: false,
+//       error: error.message
+//     });
+//   }
+// });
 
 // Subscription validation endpoint
 app.post('/validate-subscription', async (req, res) => {
+  console.log('Request body:', req.body);
+  console.log('Request headers:', req.headers);
+  
   try {
     const { subscriptionId } = req.body;
+    console.log('subscriptionId:', subscriptionId);
 
     if (!subscriptionId) {
       return res.status(400).json({ 
         valid: false, 
-        message: 'Subscription ID is required' 
+        message: 'License code is required' 
       });
     }
 
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    // Check if the license code exists in our list
+    const isValid = licenseCodes.includes(subscriptionId);
+    console.log('Is valid:', isValid);
 
-    if (subscription.status === 'active') {
+    if (isValid) {
       return res.json({ 
         valid: true, 
-        message: 'Subscription is active',
-        subscription: {
-          status: subscription.status,
-          currentPeriodEnd: subscription.currentPeriodEnd,
-          cancelAtPeriodEnd: subscription.cancelAtPeriodEnd
-        }
+        message: 'License code is valid',
+        licenseCode: subscriptionId
       });
     }
 
     return res.json({ 
       valid: false, 
-      message: 'Subscription is not active',
-      subscription: {
-        status: subscription.status
-      }
+      message: 'Invalid license code'
     });
 
   } catch (error) {
-    console.error('Error validating subscription:', error);
+    console.error('Error validating license code:', error);
     return res.status(500).json({ 
       valid: false, 
-      message: 'Error validating subscription',
+      message: 'Error validating license code',
       error: error.message 
     });
   }
